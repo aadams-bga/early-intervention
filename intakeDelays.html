@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Illinois' Early Intervention Intake Delays</title>
+    <!-- Load D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Load Google Font Inter for premium typography fallback -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+        }
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100%;
+        }
+        #intake-delays-container {
+            font-family: "Halyard Text", "halyard-text", "Inter", Arial, sans-serif;
+            max-width: 600px;
+            width: 100%;
+            margin: auto;
+            position: relative;
+            z-index: 1;
+            background-color: #ffffff; 
+            color: #333333; 
+            padding: 20px 20px 30px 20px;
+            box-sizing: border-box;
+        }
+
+        /* Typography */
+        #intake-delays-container h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+            line-height: 1.25;
+            letter-spacing: -0.01em;
+        }
+
+        #intake-delays-container p.subtitle {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.45;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 400;
+        }
+
+        /* SVG Chart Styles */
+        #chart-container {
+            position: relative;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        #chart-svg {
+            display: block;
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+
+        .axis-label {
+            font-size: 10px;
+            fill: #718096;
+            font-family: "Halyard Text", "halyard-text", "Inter", Arial, sans-serif;
+        }
+
+        .domain, .tick line {
+            stroke: #e2e8f0;
+        }
+
+        .grid-line {
+            stroke: #edf2f7;
+            stroke-width: 1px;
+        }
+
+        .baseline-line {
+            stroke: #cbd5e1;
+            stroke-width: 1.2px;
+        }
+
+        .chart-line {
+            fill: none;
+            stroke: #002080; /* IAP brand dark blue */
+            stroke-width: 3px;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Tooltip Styling */
+        #chart-tooltip {
+            position: absolute;
+            pointer-events: none;
+            display: none;
+            background-color: #ffffff;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 8px 12px;
+            font-size: 13px;
+            color: #1f2937;
+            border-radius: 2px;
+            z-index: 100;
+            line-height: 1.4;
+            pointer-events: none;
+        }
+
+        #chart-tooltip .tooltip-header {
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 2px;
+        }
+
+        #chart-tooltip .tooltip-body {
+            font-weight: 400;
+            color: #4b5563;
+        }
+
+        /* Footer Branding & Logo */
+        .graph-footer {
+            margin-top: 25px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 11px;
+            color: #718096;
+            line-height: 1.4;
+            position: relative;
+            z-index: 1;
+        }
+
+        .graph-footer a {
+            color: inherit;
+            text-decoration: underline;
+        }
+
+        .iap-logo {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 150px;
+            opacity: 0.15;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 500px) {
+            #intake-delays-container {
+                padding: 15px 15px 25px 15px;
+            }
+            #intake-delays-container h1 {
+                font-size: 18px;
+            }
+            #intake-delays-container p.subtitle {
+                font-size: 12px;
+                margin-bottom: 15px;
+            }
+            .graph-footer {
+                font-size: 10px;
+            }
+            .axis-label {
+                font-size: 8px;
+            }
+            .chart-line {
+                stroke-width: 2.2px;
+            }
+            .iap-logo {
+                width: 110px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="intake-delays-container">
+    <!-- Title and Subtitle -->
+    <h1>Illinois' Early Intervention didn't always have intake delays</h1>
+    <p class="subtitle">
+        Early Intervention requires children to be evaluated within 45 days of being referred to the program. In 2018, almost no families were waiting to receive their initial evaluation, assessment or the creation of their service plan. Yet it's become a problem in recent years.
+    </p>
+
+    <!-- Chart SVG Container -->
+    <div id="chart-wrapper" style="position: relative;">
+        <div id="chart-container">
+            <svg id="chart-svg"></svg>
+        </div>
+        <!-- Tooltip Element -->
+        <div id="chart-tooltip"></div>
+    </div>
+
+    <!-- Footer & Logo -->
+    <footer class="graph-footer">
+        Chart: Meredith Newman, Illinois Answers Project • Source: <a href="https://providerconnections.org/wp-content/uploads/2025/01/Final_EI-Cost-Model-Report_1.16.25.pdf" target="_blank" rel="noopener">Afton Partners for the Illinois Department of Human Services – Division of Early Childhood</a>
+    </footer>
+    <img src="https://raw.githubusercontent.com/aadams-bga/images/bffe8cc967881aeed4fbdee8328f4b2e056159b9/iaplogo.svg" class="iap-logo" alt="Illinois Answers Project Logo">
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Hardcoded Intake Delays data from earlyIntervention_intake.csv
+    const data = [
+        { year: 2018, delay: 0.01 },
+        { year: 2019, delay: 0.03 },
+        { year: 2020, delay: 0.00 },
+        { year: 2021, delay: 2.09 },
+        { year: 2022, delay: 4.69 },
+        { year: 2023, delay: 8.02 },
+        { year: 2024, delay: 7.62 }
+    ];
+
+    const container = d3.select("#chart-container");
+    const svg = d3.select("#chart-svg");
+    const tooltip = d3.select("#chart-tooltip");
+    const chartWrapperNode = d3.select("#chart-wrapper").node();
+
+    // Set chart margins and base dimensions
+    const margin = { top: 15, right: 15, bottom: 25, left: 35 };
+    const baseHeight = 280;
+
+    function render() {
+        // Clear previous render elements
+        svg.selectAll("*").remove();
+
+        // Get actual container width
+        const width = container.node().getBoundingClientRect().width;
+        const height = baseHeight;
+
+        const innerWidth = width - margin.left - margin.right;
+        const innerHeight = height - margin.top - margin.bottom;
+
+        // Set dimensions and responsive viewport values on the SVG
+        svg.attr("width", width)
+           .attr("height", height)
+           .attr("viewBox", `0 0 ${width} ${height}`)
+           .attr("preserveAspectRatio", "xMinYMin meet");
+
+        // Define chart defs
+        const defs = svg.append("defs");
+
+        // Chart main group
+        const g = svg.append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Scales
+        const xScale = d3.scaleLinear()
+            .domain(d3.extent(data, d => d.year))
+            .range([0, innerWidth]);
+
+        const yScale = d3.scaleLinear()
+            .domain([0, 10]) // Consistent with service delays (starts at 0% and goes to 10%)
+            .range([innerHeight, 0]);
+
+        // Y-axis gridlines
+        const yTicks = yScale.ticks(5);
+        g.append("g")
+            .attr("class", "grid")
+            .selectAll(".grid-line")
+            .data(yTicks)
+            .enter()
+            .append("line")
+            .attr("class", "grid-line")
+            .attr("x1", 0)
+            .attr("x2", innerWidth)
+            .attr("y1", d => yScale(d))
+            .attr("y2", d => yScale(d));
+
+        // Draw solid baseline at y=0
+        g.append("line")
+            .attr("class", "baseline-line")
+            .attr("x1", 0)
+            .attr("x2", innerWidth)
+            .attr("y1", yScale(0))
+            .attr("y2", yScale(0));
+
+        // X Axis
+        const xAxis = d3.axisBottom(xScale)
+            .ticks(data.length)
+            .tickFormat(d3.format("d"))
+            .tickSize(4);
+
+        g.append("g")
+            .attr("transform", `translate(0, ${innerHeight})`)
+            .call(xAxis)
+            .selectAll("text")
+            .attr("class", "axis-label")
+            .style("text-anchor", (d, i) => i === 0 ? "start" : (i === data.length - 1 ? "end" : "middle"));
+
+        // Y Axis
+        const yAxis = d3.axisLeft(yScale)
+            .ticks(5)
+            .tickFormat(d => d + "%")
+            .tickSize(0); // Hide ticks, keep labels
+
+        g.append("g")
+            .call(yAxis)
+            .selectAll("text")
+            .attr("class", "axis-label")
+            .attr("dx", "-5px");
+
+        // Area Generator (Solid Color Shading)
+        const areaGenerator = d3.area()
+            .x(d => xScale(d.year))
+            .y0(innerHeight)
+            .y1(d => yScale(d.delay))
+            .curve(d3.curveMonotoneX);
+
+        g.append("path")
+            .datum(data)
+            .attr("d", areaGenerator)
+            .attr("fill", "#002080")
+            .attr("fill-opacity", 0.08);
+
+        // Line Generator
+        const lineGenerator = d3.line()
+            .x(d => xScale(d.year))
+            .y(d => yScale(d.delay))
+            .curve(d3.curveMonotoneX);
+
+        g.append("path")
+            .datum(data)
+            .attr("class", "chart-line")
+            .attr("d", lineGenerator);
+
+        // Hover Focus elements
+        const focusLine = g.append("line")
+            .attr("stroke", "#718096")
+            .attr("stroke-width", "1px")
+            .attr("stroke-dasharray", "3,3")
+            .attr("y1", 0)
+            .attr("y2", innerHeight)
+            .style("display", "none");
+
+        const focusCircle = g.append("circle")
+            .attr("r", width > 500 ? 6 : 5)
+            .attr("fill", "#002080")
+            .attr("stroke", "#ffffff")
+            .attr("stroke-width", "2px")
+            .style("display", "none");
+
+        // Transparent overlay rect for mouseover capture
+        g.append("rect")
+            .attr("width", innerWidth)
+            .attr("height", innerHeight)
+            .attr("fill", "none")
+            .attr("pointer-events", "all")
+            .on("mouseover", showFocus)
+            .on("mousemove", moveFocus)
+            .on("mouseleave", hideFocus);
+
+        const bisectYear = d3.bisector(d => d.year).left;
+
+        function showFocus() {
+            focusLine.style("display", null);
+            focusCircle.style("display", null);
+            tooltip.style("display", "block");
+        }
+
+        function hideFocus() {
+            focusLine.style("display", "none");
+            focusCircle.style("display", "none");
+            tooltip.style("display", "none");
+        }
+
+        function moveFocus(event) {
+            const mouseX = d3.pointer(event)[0];
+            const x0 = xScale.invert(mouseX);
+            
+            // Snapping bisection
+            const idx = bisectYear(data, x0, 1);
+            const d0 = data[idx - 1];
+            const d1 = data[idx];
+            let d = d0;
+            if (d1 && (x0 - d0.year > d1.year - x0)) {
+                d = d1;
+            }
+
+            const cx = xScale(d.year);
+            const cy = yScale(d.delay);
+
+            focusLine.attr("x1", cx).attr("x2", cx);
+            focusCircle.attr("cx", cx).attr("cy", cy);
+
+            // Set tooltip content
+            tooltip.html(`
+                <div class="tooltip-header">FY ${d.year}</div>
+                <div class="tooltip-body">Intake delays: <strong>${d.delay.toFixed(2)}%</strong></div>
+            `);
+
+            // Tooltip sizing and positioning relative to wrapper coordinates
+            const tooltipNode = tooltip.node();
+            const tooltipWidth = tooltipNode.offsetWidth;
+            const tooltipHeight = tooltipNode.offsetHeight;
+            const wrapperWidth = chartWrapperNode.offsetWidth;
+            const wrapperHeight = chartWrapperNode.offsetHeight;
+
+            const coords = d3.pointer(event, chartWrapperNode);
+            let leftPos = coords[0] + 15;
+            
+            // Boundary safety check for right edge overflow
+            if (leftPos + tooltipWidth > wrapperWidth - 20) {
+                leftPos = coords[0] - tooltipWidth - 15;
+            }
+
+            // Boundary safety check for bottom edge overflow
+            let topPos = coords[1] + 15;
+            if (topPos + tooltipHeight > wrapperHeight - 20) {
+                topPos = coords[1] - tooltipHeight - 15;
+            }
+
+            tooltip.style("left", `${leftPos}px`)
+                   .style("top", `${topPos}px`);
+        }
+    }
+
+    // Initial render
+    render();
+
+    // Redraw on window resize for full responsiveness
+    window.addEventListener("resize", render);
+});
+</script>
+
+</body>
+</html>

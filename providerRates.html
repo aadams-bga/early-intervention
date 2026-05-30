@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Illinois' Early Intervention Provider Rates</title>
+    <!-- Load D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Load Google Font Inter for premium typography fallback -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+        }
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100%;
+        }
+        #provider-rates-container {
+            font-family: "Halyard Text", "halyard-text", "Inter", Arial, sans-serif;
+            max-width: 680px;
+            width: 100%;
+            margin: auto;
+            position: relative;
+            z-index: 1;
+            background-color: #ffffff; 
+            color: #333333; 
+            padding: 12px 12px 16px 12px;
+            box-sizing: border-box;
+        }
+
+        /* Typography */
+        #provider-rates-container h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+            line-height: 1.25;
+            letter-spacing: -0.01em;
+        }
+
+        #provider-rates-container p.subtitle {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.45;
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-weight: 400;
+        }
+
+        /* Table Styling */
+        #table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 8px;
+            background-color: #ffffff;
+        }
+
+        #rates-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            text-align: right;
+        }
+
+        #rates-table th {
+            background-color: #ffffff;
+            color: #1a1a1a;
+            font-weight: 700;
+            padding: 8px 18px; /* symmetric 18px side padding to protect sort indicator space */
+            text-align: center; /* center align header text to avoid overlaps */
+            border-bottom: 2px solid #2d3748;
+            cursor: pointer;
+            user-select: none;
+            position: relative; /* relative for absolute sorting indicator */
+            transition: background-color 0.15s ease;
+            white-space: normal;
+            word-wrap: break-word;
+            vertical-align: bottom;
+            font-size: 11px;
+            line-height: 1.25;
+        }
+
+        #rates-table th:hover {
+            background-color: #f7fafc;
+        }
+
+        #rates-table th:first-child {
+            text-align: left;
+            font-weight: 600;
+            padding-left: 12px;
+            padding-right: 18px; /* right padding for sort indicator */
+        }
+
+        #rates-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
+        #rates-table td {
+            padding: 6px 8px;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            transition: all 0.1s ease;
+        }
+
+        /* Highlight Illinois Row (Subtle Left Accent Bar) */
+        tr.illinois-row td {
+            font-weight: 700 !important;
+        }
+
+        tr.illinois-row td:first-child {
+            color: #002080 !important; /* brand navy text */
+            border-left: 4px solid #002080 !important; /* brand navy left bar */
+        }
+
+        /* Sticky Column for Mobile Scrolling */
+        #rates-table th:first-child,
+        #rates-table td:first-child {
+            position: sticky;
+            left: 0;
+            background-color: #ffffff;
+            z-index: 10;
+        }
+
+        #rates-table th:first-child {
+            z-index: 20;
+        }
+
+        /* Heatmap shaded cells style */
+        .shaded-cell {
+            font-weight: 500;
+        }
+
+        /* Sort indicator styling (Absolute positioned to prevent text layout breaks) */
+        .sort-indicator {
+            position: absolute;
+            right: 4px;
+            bottom: 10px;
+            font-size: 9px;
+            color: #cbd5e1; /* very subtle neutral light grey */
+            opacity: 0; /* hidden by default when unsorted */
+            pointer-events: none;
+            transition: opacity 0.15s ease, color 0.15s ease;
+        }
+
+        /* Show subtle neutral arrow on hover */
+        #rates-table th:hover .sort-indicator {
+            opacity: 1;
+        }
+
+        /* Always show active sort arrow in brand navy */
+        th.sorted-desc .sort-indicator,
+        th.sorted-asc .sort-indicator {
+            opacity: 1 !important;
+            color: #002080;
+            font-weight: 700;
+        }
+
+        /* Footer Branding & Logo */
+        .graph-footer {
+            margin-top: 12px;
+            padding-top: 0;
+            border-top: none;
+            font-size: 11px;
+            color: #718096;
+            line-height: 1.4;
+            position: relative;
+            z-index: 1;
+        }
+
+        .graph-footer a {
+            color: inherit;
+            text-decoration: underline;
+        }
+
+
+
+        /* Responsive Breakpoints */
+        @media (max-width: 500px) {
+            #provider-rates-container {
+                padding: 8px 8px 12px 8px;
+            }
+            #provider-rates-container h1 {
+                font-size: 17px;
+            }
+            #provider-rates-container p.subtitle {
+                font-size: 11.5px;
+                margin-bottom: 8px;
+            }
+            .graph-footer {
+                font-size: 10px;
+            }
+            #rates-table {
+                font-size: 10.5px;
+            }
+            #rates-table th {
+                font-size: 9px;
+                padding: 6px 4px;
+            }
+            #rates-table td {
+                padding: 6px 4px;
+            }
+            .iap-logo {
+                width: 90px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="provider-rates-container">
+    <!-- Title and Subtitle -->
+    <h1>Illinois' Early Intervention provider rates are lower than other states</h1>
+    <p class="subtitle">
+        This data, compiled by researcher Ted Burke in 2024, compared Illinois' Early Intervention provider rates to states that have a comparable living wage.
+    </p>
+
+    <!-- Table Container -->
+    <div id="table-wrapper">
+        <table id="rates-table">
+            <thead>
+                <tr>
+                    <th id="header-state" data-column="state">State<span class="sort-indicator">⇅</span></th>
+                    <th id="header-slp" data-column="slp">Speech language pathologist<span class="sort-indicator">⇅</span></th>
+                    <th id="header-ot" data-column="ot">Occupational therapist<span class="sort-indicator">⇅</span></th>
+                    <th id="header-pt" data-column="pt">Physical therapist<span class="sort-indicator">⇅</span></th>
+                    <th id="header-dev" data-column="dev">Developmental therapist/educator<span class="sort-indicator">⇅</span></th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- Rendered dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Footer -->
+    <footer class="graph-footer">
+        Chart: Meredith Newman, Illinois Answers Project • Source: <a href="https://providerconnections.org/wp-content/uploads/2024/04/Illinois-EI-Recommendations-04.20.24.pdf" target="_blank" rel="noopener">Ted Burke</a>
+    </footer>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Dataset transposed: columns are professions, rows are states
+    // Midpoint calculated for ranges:
+    // Arizona: $133-$199 -> 166.00, $96-$144 -> 120.00
+    // Utah: $103-$108 -> 105.50, $127-$130 -> 128.50, $74-$78 -> 76.00
+    const rawData = [
+        { state: "Illinois", slp: "$84.64", slpVal: 84.64, ot: "$84.64", otVal: 84.64, pt: "$84.64", ptVal: 84.64, dev: "$66.80", devVal: 66.80 },
+        { state: "Arizona", slp: "$133-$199", slpVal: 166.00, ot: "$133-$199", otVal: 166.00, pt: "$133-$199", ptVal: 166.00, dev: "$96-$144", devVal: 120.00 },
+        { state: "Indiana", slp: "$117.52", slpVal: 117.52, ot: "$132.52", otVal: 132.52, pt: "$140.00", ptVal: 140.00, dev: "$85.52", devVal: 85.52 },
+        { state: "Virginia", slp: "$150.00", slpVal: 150.00, ot: "$150.00", otVal: 150.00, pt: "$150.00", ptVal: 150.00, dev: "$110.00", devVal: 110.00 },
+        { state: "Utah", slp: "$103-$108", slpVal: 105.50, ot: "$127-$130", otVal: 128.50, pt: "$127-$130", ptVal: 128.50, dev: "$74-$78", devVal: 76.00 },
+        { state: "Missouri", slp: "$85.00", slpVal: 85.00, ot: "$85.00", otVal: 85.00, pt: "$100.00", ptVal: 100.00, dev: "$75.00", devVal: 75.00 },
+        { state: "Connecticut", slp: "$120.00", slpVal: 120.00, ot: "$120.00", otVal: 120.00, pt: "$120.00", ptVal: 120.00, dev: "$120.00", devVal: 120.00 },
+        { state: "Kentucky", slp: "$89.00", slpVal: 89.00, ot: "$89.00", otVal: 89.00, pt: "$89.00", ptVal: 89.00, dev: "$89.00", devVal: 89.00 },
+        { state: "New Jersey", slp: "$111.52", slpVal: 111.52, ot: "$111.52", otVal: 111.52, pt: "$111.52", ptVal: 111.52, dev: "$94.76", devVal: 94.76 }
+    ];
+
+    // Compute average rate for default sorting
+    rawData.forEach(d => {
+        d.average = (d.slpVal + d.otVal + d.ptVal + d.devVal) / 4;
+    });
+
+    // Create D3 color scale (soft slate-grey to dark blue)
+    // Domain stretches from the absolute minimum value ($66.80) to the maximum midpoint ($166.00)
+    const minVal = 66.80;
+    const maxVal = 166.00;
+    const colorScale = d3.scaleLinear()
+        .domain([minVal, maxVal])
+        .range(["#f8fafc", "#334155"]); // Soft neutral slate to dark charcoal slate
+
+    // State parameters for sorting
+    let currentSortColumn = null; // null represents default sorting by average
+    let currentSortDirection = null; // desc, asc, or null
+
+    function getSortedData() {
+        if (currentSortColumn === null) {
+            // Default sort: average row value descending
+            return [...rawData].sort((a, b) => b.average - a.average);
+        }
+
+        const col = currentSortColumn;
+        const dir = currentSortDirection;
+
+        return [...rawData].sort((a, b) => {
+            let valA, valB;
+
+            if (col === "state") {
+                valA = a.state;
+                valB = b.state;
+                if (valA < valB) return dir === "asc" ? -1 : 1;
+                if (valA > valB) return dir === "asc" ? 1 : -1;
+                return 0;
+            } else {
+                // Professions: slp, ot, pt, dev
+                valA = a[col + "Val"];
+                valB = b[col + "Val"];
+                return dir === "asc" ? valA - valB : valB - valA;
+            }
+        });
+    }
+
+    function renderTable() {
+        const sortedData = getSortedData();
+        const tbody = d3.select("#table-body");
+        tbody.selectAll("*").remove();
+
+        sortedData.forEach(row => {
+            const tr = tbody.append("tr");
+            if (row.state === "Illinois") {
+                tr.attr("class", "illinois-row");
+            }
+            
+            // Render state cell (no shading)
+            tr.append("td").text(row.state);
+
+            // Shaded profession columns
+            const professions = ["slp", "ot", "pt", "dev"];
+            professions.forEach(prof => {
+                const textVal = row[prof];
+                const numVal = row[prof + "Val"];
+                const bgColor = colorScale(numVal);
+                
+                // Protect text contrast: white text on dark cells, dark text on light cells
+                const textColor = numVal >= 115 ? "#ffffff" : "#1f2937";
+
+                tr.append("td")
+                  .attr("class", "shaded-cell")
+                  .style("background-color", bgColor)
+                  .style("color", textColor)
+                  .text(textVal);
+            });
+        });
+
+        // Update sorting carets on headers
+        d3.selectAll("#rates-table th").each(function() {
+            const th = d3.select(this);
+            const col = th.attr("data-column");
+            const indicator = th.select(".sort-indicator");
+
+            if (col === currentSortColumn) {
+                if (currentSortDirection === "desc") {
+                    th.attr("class", "sorted-desc");
+                    indicator.text("▼");
+                } else if (currentSortDirection === "asc") {
+                    th.attr("class", "sorted-asc");
+                    indicator.text("▲");
+                }
+            } else {
+                th.attr("class", "");
+                indicator.text("⇅");
+            }
+        });
+    }
+
+    // Set up click handlers on table headers
+    d3.selectAll("#rates-table th").on("click", function() {
+        const col = d3.select(this).attr("data-column");
+
+        if (currentSortColumn === col) {
+            // Cycle: desc -> asc -> default (null)
+            if (currentSortDirection === "desc") {
+                currentSortDirection = "asc";
+            } else if (currentSortDirection === "asc") {
+                currentSortColumn = null;
+                currentSortDirection = null;
+            }
+        } else {
+            // Set new sort column, default to descending first
+            currentSortColumn = col;
+            currentSortDirection = "desc";
+        }
+
+        renderTable();
+    });
+
+    // Initial render
+    renderTable();
+});
+</script>
+
+</body>
+</html>
