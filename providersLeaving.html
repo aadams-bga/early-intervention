@@ -17,6 +17,7 @@
             margin: 0;
             padding: 0;
             background-color: #ffffff;
+            overflow: hidden;
         }
         body {
             display: flex;
@@ -62,6 +63,7 @@
             position: relative;
             width: 100%;
             margin: 0 auto;
+            z-index: 10;
         }
 
         #chart-svg {
@@ -161,7 +163,7 @@
             right: 10px;
             width: 150px;
             opacity: 0.15;
-            z-index: 0;
+            z-index: 1;
             pointer-events: none;
         }
 
@@ -203,6 +205,7 @@
 
     <!-- Chart SVG Container -->
     <div id="chart-wrapper" style="position: relative;">
+        <img src="https://raw.githubusercontent.com/aadams-bga/images/bffe8cc967881aeed4fbdee8328f4b2e056159b9/iaplogo.svg" class="iap-logo" alt="Illinois Answers Project Logo">
         <div id="chart-container">
             <svg id="chart-svg"></svg>
         </div>
@@ -214,7 +217,6 @@
     <footer class="graph-footer">
         Chart: Meredith Newman, Illinois Answers Project • Source: <a href="https://providerconnections.org/wp-content/uploads/2025/01/Final_EI-Cost-Model-Report_1.16.25.pdf" target="_blank" rel="noopener">Afton Partners for the Illinois Department of Human Services – Division of Early Childhood</a>
     </footer>
-    <img src="https://raw.githubusercontent.com/aadams-bga/images/bffe8cc967881aeed4fbdee8328f4b2e056159b9/iaplogo.svg" class="iap-logo" alt="Illinois Answers Project Logo">
 </div>
 
 <script>
@@ -353,16 +355,36 @@ document.addEventListener("DOMContentLoaded", function() {
                 `);
 
             const [mouseX, mouseY] = d3.pointer(event, chartWrapperNode);
-            tooltip
-                .style("left", (mouseX + 15) + "px")
-                .style("top", (mouseY - 15) + "px");
+            positionTooltip(mouseX, mouseY);
         }
 
         function moveTooltip(event) {
             const [mouseX, mouseY] = d3.pointer(event, chartWrapperNode);
+            positionTooltip(mouseX, mouseY);
+        }
+
+        function positionTooltip(mouseX, mouseY) {
+            const tooltipNode = tooltip.node();
+            const tooltipWidth = tooltipNode.offsetWidth || 180;
+            const tooltipHeight = tooltipNode.offsetHeight || 85;
+
+            // X-position: if past 55% of the chart width, flip to the left of the cursor
+            let leftPos = mouseX + 15;
+            if (mouseX > width * 0.55) {
+                leftPos = mouseX - tooltipWidth - 15;
+            }
+
+            // Y-position: center vertically, but clamp to keep it inside the chart area
+            let topPos = mouseY - tooltipHeight / 2;
+            if (topPos < 5) {
+                topPos = 5;
+            } else if (topPos + tooltipHeight > height - 5) {
+                topPos = height - tooltipHeight - 5;
+            }
+
             tooltip
-                .style("left", (mouseX + 15) + "px")
-                .style("top", (mouseY - 15) + "px");
+                .style("left", leftPos + "px")
+                .style("top", topPos + "px");
         }
 
         function resetHighlight() {
