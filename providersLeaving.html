@@ -186,7 +186,7 @@
                 width: 110px;
             }
             .row-label {
-                font-size: 10.5px;
+                font-size: 10px;
             }
             .axis-label {
                 font-size: 9px;
@@ -314,11 +314,33 @@ document.addEventListener("DOMContentLoaded", function() {
             .attr("y2", topMargin + innerHeight);
 
         // Draw Left-Aligned Labels
-        rows.append("text")
-            .attr("class", "row-label")
-            .attr("x", -10)
-            .attr("y", d => yScale(d.id) + yScale.bandwidth() / 2 + 4)
-            .text(d => d.discipline);
+        const isMobile = width < 500;
+        rows.each(function(d) {
+            const textSel = d3.select(this).append("text")
+                .attr("class", "row-label")
+                .attr("x", -10)
+                .attr("y", yScale(d.id) + yScale.bandwidth() / 2 + (isMobile ? -1 : 4));
+
+            if (isMobile) {
+                let parts = [];
+                if (d.discipline.includes("/")) {
+                    parts = d.discipline.split("/");
+                    parts[0] = parts[0] + "/";
+                } else {
+                    parts = d.discipline.split(" ");
+                }
+                
+                textSel.append("tspan")
+                    .text(parts[0]);
+                
+                textSel.append("tspan")
+                    .attr("x", -10)
+                    .attr("dy", 10)
+                    .text(parts[1]);
+            } else {
+                textSel.text(d.discipline);
+            }
+        });
 
         // Render X Axis (horizontal percentage scale)
         const xAxis = d3.axisBottom(xScale)
