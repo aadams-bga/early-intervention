@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Illinois' Early Intervention Provider Rates</title>
-    <!-- Load D3.js -->
+    
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <!-- Load Google Font Inter for premium typography fallback -->
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -38,7 +38,7 @@
             box-sizing: border-box;
         }
 
-        /* Typography */
+        
         #provider-rates-container h1 {
             font-size: 22px;
             font-weight: 700;
@@ -58,7 +58,7 @@
             font-weight: 400;
         }
 
-        /* Table Styling */
+        
         #table-wrapper {
             width: 100%;
             overflow-x: auto;
@@ -78,12 +78,12 @@
             background-color: #ffffff;
             color: #1a1a1a;
             font-weight: 700;
-            padding: 8px 18px; /* symmetric 18px side padding to protect sort indicator space */
-            text-align: center; /* center align header text to avoid overlaps */
+            padding: 8px 18px; 
+            text-align: center; 
             border-bottom: 2px solid #2d3748;
             cursor: pointer;
             user-select: none;
-            position: relative; /* relative for absolute sorting indicator */
+            position: relative; 
             transition: background-color 0.15s ease;
             white-space: normal;
             word-wrap: break-word;
@@ -100,7 +100,7 @@
             text-align: left;
             font-weight: 600;
             padding-left: 12px;
-            padding-right: 18px; /* right padding for sort indicator */
+            padding-right: 18px; 
         }
 
         #rates-table td:first-child {
@@ -118,17 +118,17 @@
             transition: all 0.1s ease;
         }
 
-        /* Highlight Illinois Row (Subtle Left Accent Bar) */
+        
         tr.illinois-row td {
             font-weight: 700 !important;
         }
 
         tr.illinois-row td:first-child {
-            color: #002080 !important; /* brand navy text */
-            border-left: 4px solid #002080 !important; /* brand navy left bar */
+            color: #002080 !important; 
+            border-left: 4px solid #002080 !important; 
         }
 
-        /* Sticky Column for Mobile Scrolling */
+        
         #rates-table th:first-child,
         #rates-table td:first-child {
             position: sticky;
@@ -141,29 +141,29 @@
             z-index: 20;
         }
 
-        /* Heatmap shaded cells style */
+        
         .shaded-cell {
             font-weight: 500;
         }
 
-        /* Sort indicator styling (Absolute positioned to prevent text layout breaks) */
+        
         .sort-indicator {
             position: absolute;
             right: 4px;
             bottom: 10px;
             font-size: 9px;
-            color: #cbd5e1; /* very subtle neutral light grey */
-            opacity: 0; /* hidden by default when unsorted */
+            color: #cbd5e1; 
+            opacity: 0; 
             pointer-events: none;
             transition: opacity 0.15s ease, color 0.15s ease;
         }
 
-        /* Show subtle neutral arrow on hover */
+        
         #rates-table th:hover .sort-indicator {
             opacity: 1;
         }
 
-        /* Always show active sort arrow in brand navy */
+        
         th.sorted-desc .sort-indicator,
         th.sorted-asc .sort-indicator {
             opacity: 1 !important;
@@ -171,7 +171,7 @@
             font-weight: 700;
         }
 
-        /* Footer Branding & Logo */
+        
         .graph-footer {
             margin-top: 12px;
             padding-top: 0;
@@ -190,7 +190,7 @@
 
 
 
-        /* Responsive Breakpoints */
+        
         @media (max-width: 500px) {
             #provider-rates-container {
                 padding: 8px 8px 12px 8px;
@@ -224,13 +224,13 @@
 <body>
 
 <div id="provider-rates-container">
-    <!-- Title and Subtitle -->
+    
     <h1>Illinois' Early Intervention provider rates are lower than other states</h1>
     <p class="subtitle">
         This data, compiled by researcher Ted Burke in 2024, compared Illinois' Early Intervention provider rates to states that have a comparable living wage.  
     </p>
 
-    <!-- Table Container -->
+    
     <div id="table-wrapper">
         <table id="rates-table">
             <thead>
@@ -243,12 +243,12 @@
                 </tr>
             </thead>
             <tbody id="table-body">
-                <!-- Rendered dynamically -->
+                
             </tbody>
         </table>
     </div>
 
-    <!-- Footer -->
+    
     <footer class="graph-footer">
         Chart: Meredith Newman, Illinois Answers Project • Source: <a href="https://providerconnections.org/wp-content/uploads/2024/04/Illinois-EI-Recommendations-04.20.24.pdf" target="_blank" rel="noopener">Ted Burke</a>
     </footer>
@@ -256,10 +256,10 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // Dataset transposed: columns are professions, rows are states
-    // Midpoint calculated for ranges:
-    // Arizona: $133-$199 -> 166.00, $96-$144 -> 120.00
-    // Utah: $103-$108 -> 105.50, $127-$130 -> 128.50, $74-$78 -> 76.00
+    
+    
+    
+    
     const rawData = [
         { state: "Illinois", slp: "$84.64", slpVal: 84.64, ot: "$84.64", otVal: 84.64, pt: "$84.64", ptVal: 84.64, dev: "$66.80", devVal: 66.80 },
         { state: "Arizona", slp: "$133-$199", slpVal: 166.00, ot: "$133-$199", otVal: 166.00, pt: "$133-$199", ptVal: 166.00, dev: "$96-$144", devVal: 120.00 },
@@ -272,26 +272,26 @@ document.addEventListener("DOMContentLoaded", function() {
         { state: "New Jersey", slp: "$111.52", slpVal: 111.52, ot: "$111.52", otVal: 111.52, pt: "$111.52", ptVal: 111.52, dev: "$94.76", devVal: 94.76 }
     ];
 
-    // Compute average rate for default sorting
+    
     rawData.forEach(d => {
         d.average = (d.slpVal + d.otVal + d.ptVal + d.devVal) / 4;
     });
 
-    // Create D3 color scale (soft slate-grey to dark blue)
-    // Domain stretches from the absolute minimum value ($66.80) to the maximum midpoint ($166.00)
+    
+    
     const minVal = 66.80;
     const maxVal = 166.00;
     const colorScale = d3.scaleLinear()
         .domain([minVal, maxVal])
-        .range(["#f8fafc", "#334155"]); // Soft neutral slate to dark charcoal slate
+        .range(["#f8fafc", "#334155"]); 
 
-    // State parameters for sorting
-    let currentSortColumn = null; // null represents default sorting by average
-    let currentSortDirection = null; // desc, asc, or null
+    
+    let currentSortColumn = null; 
+    let currentSortDirection = null; 
 
     function getSortedData() {
         if (currentSortColumn === null) {
-            // Default sort: average row value descending
+            
             return [...rawData].sort((a, b) => b.average - a.average);
         }
 
@@ -308,7 +308,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (valA > valB) return dir === "asc" ? 1 : -1;
                 return 0;
             } else {
-                // Professions: slp, ot, pt, dev
+                
                 valA = a[col + "Val"];
                 valB = b[col + "Val"];
                 return dir === "asc" ? valA - valB : valB - valA;
@@ -327,17 +327,17 @@ document.addEventListener("DOMContentLoaded", function() {
                 tr.attr("class", "illinois-row");
             }
             
-            // Render state cell (no shading)
+            
             tr.append("td").text(row.state);
 
-            // Shaded profession columns
+            
             const professions = ["slp", "ot", "pt", "dev"];
             professions.forEach(prof => {
                 const textVal = row[prof];
                 const numVal = row[prof + "Val"];
                 const bgColor = colorScale(numVal);
                 
-                // Protect text contrast: white text on dark cells, dark text on light cells
+                
                 const textColor = numVal >= 115 ? "#ffffff" : "#1f2937";
 
                 tr.append("td")
@@ -348,7 +348,7 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         });
 
-        // Update sorting carets on headers
+        
         d3.selectAll("#rates-table th").each(function() {
             const th = d3.select(this);
             const col = th.attr("data-column");
@@ -369,12 +369,12 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Set up click handlers on table headers
+    
     d3.selectAll("#rates-table th").on("click", function() {
         const col = d3.select(this).attr("data-column");
 
         if (currentSortColumn === col) {
-            // Cycle: desc -> asc -> default (null)
+            
             if (currentSortDirection === "desc") {
                 currentSortDirection = "asc";
             } else if (currentSortDirection === "asc") {
@@ -382,15 +382,13 @@ document.addEventListener("DOMContentLoaded", function() {
                 currentSortDirection = null;
             }
         } else {
-            // Set new sort column, default to descending first
+            
             currentSortColumn = col;
             currentSortDirection = "desc";
         }
 
         renderTable();
     });
-
-    // Initial render
     renderTable();
 });
 </script>

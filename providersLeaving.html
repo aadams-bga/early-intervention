@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Therapists leaving Early Intervention</title>
-    <!-- Load D3.js -->
+    
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <!-- Load Google Font Inter for premium typography fallback -->
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -38,7 +38,7 @@
             box-sizing: border-box;
         }
 
-        /* Typography */
+        
         #chart-container-wrapper h1 {
             font-size: 22px;
             font-weight: 700;
@@ -58,7 +58,7 @@
             font-weight: 400;
         }
 
-        /* SVG Chart Styles */
+        
         #chart-container {
             position: relative;
             width: 100%;
@@ -73,7 +73,7 @@
             overflow: visible;
         }
 
-        /* Grid lines */
+        
         .grid-line {
             stroke: #f1f5f9;
             stroke-width: 1.2px;
@@ -95,7 +95,7 @@
             stroke-width: 1px;
         }
 
-        /* Bars and Labels */
+        
         .bar {
             transition: opacity 0.15s ease;
         }
@@ -113,7 +113,7 @@
             transition: font-weight 0.15s ease, fill 0.15s ease, opacity 0.15s ease;
         }
 
-        /* Tooltip Styling */
+        
         #chart-tooltip {
             position: absolute;
             pointer-events: none;
@@ -140,7 +140,7 @@
             color: #64748b;
         }
 
-        /* Footer Branding & Logo */
+        
         .graph-footer {
             margin-top: 25px;
             padding-top: 12px;
@@ -167,7 +167,7 @@
             pointer-events: none;
         }
 
-        /* Responsive Breakpoints */
+        
         @media (max-width: 500px) {
             #chart-container-wrapper {
                 padding: 15px 15px 25px 15px;
@@ -197,22 +197,22 @@
 <body>
 
 <div id="chart-container-wrapper">
-    <!-- Title and Subtitle -->
+    
     <h1>Therapists leaving Early Intervention</h1>
     <p class="subtitle">
         Providers are leaving Early Intervention, with an estimated 500 providers leaving each year from 2018 to 2022. The number of therapists entering Early Intervention isn't catching up.
     </p>
 
-    <!-- Chart SVG Container -->
+    
     <div id="chart-wrapper" style="position: relative;">
         <div id="chart-container">
             <svg id="chart-svg"></svg>
         </div>
-        <!-- Tooltip Element -->
+        
         <div id="chart-tooltip"></div>
     </div>
 
-    <!-- Footer & Logo -->
+    
     <footer class="graph-footer">
         Chart: Meredith Newman, Illinois Answers Project • Source: <a href="https://providerconnections.org/wp-content/uploads/2025/01/Final_EI-Cost-Model-Report_1.16.25.pdf" target="_blank" rel="noopener">Afton Partners for the Illinois Department of Human Services – Division of Early Childhood</a>
     </footer>
@@ -221,7 +221,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // Hardcoded active providers percent change data
+    
     const data = [
         { id: "psych", discipline: "Psychology/Social Work", val2018: 212, val2023: 136, change: -0.3585, changeText: "-35.8%", isDecline: true },
         { id: "pt", discipline: "Physical Therapy", val2018: 491, val2023: 411, change: -0.1629, changeText: "-16.3%", isDecline: true },
@@ -240,42 +240,42 @@ document.addEventListener("DOMContentLoaded", function() {
     const bottomMargin = 30;
 
     function render() {
-        // Clear previous render elements
+        
         svg.selectAll("*").remove();
 
-        // Get actual container width
+        
         const width = container.node().getBoundingClientRect().width;
         const height = baseHeight;
 
-        // Dynamic horizontal margins for text space
+        
         const leftMargin = width < 500 ? 115 : 145;
         const rightMargin = width < 500 ? 20 : 25;
         
         const innerWidth = width - leftMargin - rightMargin;
         const innerHeight = height - topMargin - bottomMargin;
 
-        // Set dimensions and responsive viewport values on the SVG
+        
         svg.attr("width", width)
            .attr("height", height)
            .attr("viewBox", `0 0 ${width} ${height}`)
            .attr("preserveAspectRatio", "xMinYMin meet");
 
-        // X Scale maps percent change (-40% to +15%) to chart width
+        
         const xScale = d3.scaleLinear()
             .domain([-0.40, 0.15])
             .range([0, innerWidth]);
 
-        // Y Scale maps each discipline row
+        
         const yScale = d3.scaleBand()
             .domain(data.map(d => d.id))
             .range([topMargin, topMargin + innerHeight])
             .padding(0.35);
 
-        // Chart main group
+        
         const g = svg.append("g")
             .attr("transform", `translate(${leftMargin},0)`);
 
-        // Draw vertical grid lines (ticks every 10%)
+        
         const xTicks = [-0.40, -0.30, -0.20, -0.10, 0.00, 0.10];
         g.selectAll(".grid-line")
             .data(xTicks)
@@ -287,15 +287,15 @@ document.addEventListener("DOMContentLoaded", function() {
             .attr("y1", topMargin)
             .attr("y2", topMargin + innerHeight);
 
-        // Draw Row Groups
+        
         const rows = g.selectAll(".row-group")
             .data(data)
             .enter()
             .append("g")
             .attr("class", "row-group");
 
-        // Helper to draw sharp rectangle path
-        // (Diverging bar chart bars extend left/right from 0%)
+        
+        
         rows.append("rect")
             .attr("class", "bar")
             .attr("x", d => d.change < 0 ? xScale(d.change) : xScale(0))
@@ -305,7 +305,7 @@ document.addEventListener("DOMContentLoaded", function() {
             .attr("fill", d => d.isDecline ? "#002080" : "#64748b")
             .attr("opacity", 0.9);
 
-        // Draw vertical 0% baseline
+        
         g.append("line")
             .attr("class", "baseline-line")
             .attr("x1", xScale(0))
@@ -313,7 +313,7 @@ document.addEventListener("DOMContentLoaded", function() {
             .attr("y1", topMargin)
             .attr("y2", topMargin + innerHeight);
 
-        // Draw Left-Aligned Labels
+        
         const isMobile = width < 500;
         rows.each(function(d) {
             const textSel = d3.select(this).append("text")
@@ -342,7 +342,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
 
-        // Render X Axis (horizontal percentage scale)
+        
         const xAxis = d3.axisBottom(xScale)
             .tickValues([-0.40, -0.30, -0.20, -0.10, 0.00, 0.10])
             .tickFormat(d => d === 0 ? "0%" : d3.format("+.0%")(d))
@@ -356,7 +356,7 @@ document.addEventListener("DOMContentLoaded", function() {
         xAxisG.selectAll(".tick line").attr("class", "axis-line");
         xAxisG.selectAll("text").attr("class", "axis-label");
 
-        // Interaction Setup
+        
         function highlight(event, d) {
             rows.style("opacity", x => x.id === d.id ? 1.0 : 0.15);
             rows.selectAll(".bar")
@@ -365,7 +365,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 .style("font-weight", x => x.id === d.id ? "700" : "500")
                 .style("fill", x => x.id === d.id ? "#002080" : "#334155");
 
-            // Update and show tooltip
+            
             tooltip.style("display", "block")
                 .html(`
                     <div class="tooltip-header">${d.discipline}</div>
@@ -390,13 +390,13 @@ document.addEventListener("DOMContentLoaded", function() {
             const tooltipWidth = tooltipNode.offsetWidth || 180;
             const tooltipHeight = tooltipNode.offsetHeight || 85;
 
-            // X-position: if past 55% of the chart width, flip to the left of the cursor
+            
             let leftPos = mouseX + 15;
             if (mouseX > width * 0.55) {
                 leftPos = mouseX - tooltipWidth - 15;
             }
 
-            // Y-position: center vertically, but clamp to keep it inside the chart area
+            
             let topPos = mouseY - tooltipHeight / 2;
             if (topPos < 5) {
                 topPos = 5;
@@ -419,13 +419,13 @@ document.addEventListener("DOMContentLoaded", function() {
             tooltip.style("display", "none");
         }
 
-        // Bind events
+        
         rows.on("mouseenter", (event, d) => highlight(event, d))
             .on("mousemove", moveTooltip)
             .on("mouseleave", resetHighlight);
     }
 
-    // Initial render and bind window resize
+    
     render();
     window.addEventListener("resize", render);
 });
